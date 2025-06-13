@@ -1,0 +1,151 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model User {
+  id            String    @id @default(cuid())
+  name          String?
+  email         String    @unique
+  emailVerified DateTime?
+  image         String?
+  password      String?   // Hashed password
+  isEmailVerified Boolean @default(false)
+  needsPasswordChange Boolean @default(true) // True when auto-generated password is used
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Credit-based subscription system
+  subscriptionType SubscriptionType @default(FREE_TRIAL)
+  subscriptionId   String?
+  customerId       String?
+  apiKey           String?           // Encrypted OpenAI API key for OWN_API_KEY subscription
+
+  // Credit tracking
+  credits          Int      @default(3) // Free trial starts with 3 credits
+  totalCreditsUsed Int      @default(0) // Track lifetime usage
+
+  accounts    Account[]
+  sessions    Session[]
+  conversions Conversion[]
+  purchases   Purchase[]
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model StylePreset {
+  id          String @id @default(cuid())
+  name        String
+  description String
+  prompt      String
+  previewUrl  String?
+  category    String @default("General")
+  isActive    Boolean @default(true)
+  createdAt   DateTime @default(now())
+
+  conversions Conversion[]
+}
+
+model Conversion {
+  id            String   @id @default(cuid())
+  userId        String
+  stylePresetId String
+  originalUrl   String
+  convertedUrl  String?
+  status        ConversionStatus @default(PENDING)
+  errorMessage  String?
+  creditsUsed   Int      @default(1) // Track credits used for this conversion
+  createdAt     DateTime @default(now())
+  completedAt   DateTime?
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stylePreset StylePreset @relation(fields: [stylePresetId], references: [id])
+}
+
+model Purchase {
+  id               String      @id @default(cuid())
+  userId           String
+  purchaseType     PurchaseType
+  credits          Int         // Credits purchased
+  amount           Float       // Amount paid in dollars
+  currency         String      @default("USD")
+  paymentProvider  String      // "stripe" or "paypal"
+  paymentId        String      // Payment ID from provider
+  status           PurchaseStatus @default(PENDING)
+  createdAt        DateTime    @default(now())
+  completedAt      DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+enum SubscriptionType {
+  FREE_TRIAL
+  STARTER      // $4.99 - 15 credits
+  STANDARD     // $9.99 - 35 credits
+  PRO          // $14.99 - 60 credits
+  MONTHLY      // Legacy monthly subscription
+  LIFETIME     // Legacy lifetime subscription
+  OWN_API_KEY  // User provides their own OpenAI API key
+}
+
+enum PurchaseType {
+  STARTER_PLAN
+  STANDARD_PLAN
+  PRO_PLAN
+  QUICK_BOOST_PACK  // 10 credits for $2.99
+  POWER_PACK        // 25 credits for $6.99
+}
+
+enum PurchaseStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum ConversionStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+}
