@@ -1,7 +1,7 @@
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 
-// Simplified NextAuth config for demo deployment (no database)
+// Build-safe NextAuth config
 const handler = NextAuth({
   providers: [
     CredentialsProvider({
@@ -11,7 +11,7 @@ const handler = NextAuth({
         password: { label: "Password", type: "password" }
       },
       async authorize(credentials) {
-        // Demo mode - accept any credentials for now
+        // Demo mode - accept any credentials
         if (credentials?.email && credentials?.password) {
           return {
             id: "demo-user",
@@ -23,27 +23,9 @@ const handler = NextAuth({
       }
     }),
   ],
-  secret: process.env.NEXTAUTH_SECRET || "fallback-secret-for-build",
-  session: {
-    strategy: "jwt",
-  },
-  callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        token.id = user.id
-      }
-      return token
-    },
-    async session({ session, token }) {
-      if (token && session.user) {
-        session.user.id = token.id as string
-      }
-      return session
-    },
-  },
-  pages: {
-    signIn: "/auth/signin",
-  },
+  secret: process.env.NEXTAUTH_SECRET || "demo-secret-key-12345",
+  session: { strategy: "jwt" },
+  pages: { signIn: "/auth/signin" },
 })
 
 export { handler as GET, handler as POST }
