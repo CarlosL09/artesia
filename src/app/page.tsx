@@ -77,7 +77,7 @@ export default function LandingPage() {
           </div>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-800 text-lg px-8 py-6" asChild>
+            <Button size="lg" variant="outline" className="border-purple-400 text-purple-300 hover:bg-purple-900/30 hover:text-purple-200 text-lg px-8 py-6" asChild>
               <Link href="#pricing">View Pricing Plans</Link>
             </Button>
           </div>
@@ -333,7 +333,7 @@ export default function LandingPage() {
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
-            <Button size="lg" variant="outline" className="border-purple-300 text-purple-100 hover:bg-purple-800 text-lg px-8 py-6" asChild>
+            <Button size="lg" variant="outline" className="border-purple-300 text-purple-200 hover:bg-purple-800/50 hover:text-white text-lg px-8 py-6" asChild>
               <Link href="#pricing">View Pricing Plans</Link>
             </Button>
           </div>
